@@ -1,4 +1,4 @@
-#Mon Oct 01 10:18:55 IST 2018
+#Tue Oct 09 11:13:21 IST 2018
 base.0=/Users/nipun/Nikhil/Android Projects/XMPP_CHAT/XMPP_CHAT/XMPPChat/app/build/intermediates/transforms/dexMerger/debug/0
 path.1=classes.dex
 renamed.1=classes2.dex
