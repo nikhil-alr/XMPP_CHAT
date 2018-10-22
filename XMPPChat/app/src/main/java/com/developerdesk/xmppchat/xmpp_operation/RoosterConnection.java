@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
+import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
@@ -15,6 +16,8 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 
 import java.io.IOException;
+
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * Created by gakwaya on 4/28/2016.
@@ -46,7 +49,7 @@ public class RoosterConnection implements ConnectionListener {
         Log.d(TAG,"RoosterConnection Constructor called.");
         mApplicationContext = context.getApplicationContext();
         String jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
-                .getString("xmpp_jid",null);
+                .getString("admin",null);
         mPassword = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
                 .getString("xmpp_password",null);
 
@@ -64,21 +67,33 @@ public class RoosterConnection implements ConnectionListener {
 
     public void connect() throws IOException,XMPPException,SmackException
     {
+
+        String DOMAIN = "192.168.0.110";
+        //String DOMAIN = "rooms.dismail.de";
+        int PORT = 5222;
+        String key = "123456";
         Log.d(TAG, "Connecting to server " + mServiceName);
-        XMPPTCPConnectionConfiguration.Builder builder=
-                XMPPTCPConnectionConfiguration.builder();
-        builder.setServiceName(mServiceName);
-        builder.setUsernameAndPassword(mUsername, mPassword);
-        //builder.setat
-        builder.setResource("Rooster");
+        XMPPTCPConnectionConfiguration.Builder config = XMPPTCPConnectionConfiguration.builder();
+        config.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
+        config.setUsernameAndPassword("tiwari", key);
+        config.setServiceName(DOMAIN);
+        config.setHost(DOMAIN);
+        config.setPort(PORT);
+        config.setDebuggerEnabled(true);
+        config.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
+        //config.setSocketFactory(SSLSocketFactory.getDefault());
 
-        //Set up the ui thread broadcast message receiver.
-        //setupUiThreadBroadCastMessageReceiver();
+        mConnection = new XMPPTCPConnection(config.build());
+        try {
+            mConnection.connect();
+        } catch (SmackException | IOException | XMPPException e) {
+            e.printStackTrace();
+        }
 
-        mConnection = new XMPPTCPConnection(builder.build());
-        mConnection.addConnectionListener(this);
-        mConnection.connect();
-        mConnection.login();
+
+
+
+      mConnection.login();
 
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);

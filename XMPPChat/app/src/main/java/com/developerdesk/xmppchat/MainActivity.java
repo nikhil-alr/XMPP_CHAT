@@ -1,5 +1,6 @@
 package com.developerdesk.xmppchat;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -12,6 +13,7 @@ import android.widget.LinearLayout;
 
 import com.developerdesk.xmppchat.adapter.ChatAdapter;
 import com.developerdesk.xmppchat.datamodel.ChatDataModel;
+import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,5 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        startService(new Intent(this,RoosterConnectionService.class));
     }
 }
