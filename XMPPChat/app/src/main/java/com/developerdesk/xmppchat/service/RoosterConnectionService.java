@@ -1,13 +1,18 @@
 package com.developerdesk.xmppchat.service;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.developerdesk.xmppchat.datamodel.ChatDataModel;
 import com.developerdesk.xmppchat.xmpp_operation.RoosterConnection;
 
 import org.jivesoftware.smack.SmackException;
@@ -25,6 +30,9 @@ public class RoosterConnectionService extends Service {
     private Handler mTHandler;//We use this handler to post messages to
     //the background thread.
 
+    public static final String SEND_MESSAGE = "com.blikoon.rooster.sendmessage";
+    public static final String BUNDLE_MESSAGE_BODY = "b_body";
+    public static final String BUNDLE_TO = "b_to";
 
     public static RoosterConnection.ConnectionState sConnectionState;
     public static RoosterConnection.LoggedInState sLoggedInState;
@@ -120,6 +128,8 @@ public class RoosterConnectionService extends Service {
         }
         try
         {
+            LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver,
+                    new IntentFilter("sendmessage-event"));
             mConnection.connect();
 
         }catch (IOException |SmackException |XMPPException e)
@@ -132,4 +142,16 @@ public class RoosterConnectionService extends Service {
 
     }
 
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("message");
+            Log.d("receiver", "Got message: " + message);
+            mConnection.sendmessage(message,"vijay@desktop-qqj7qad/Smack");
+
+
+        }
+    };
 }

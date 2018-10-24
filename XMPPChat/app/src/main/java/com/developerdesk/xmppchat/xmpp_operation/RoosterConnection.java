@@ -1,19 +1,31 @@
 package com.developerdesk.xmppchat.xmpp_operation;
 
 import android.content.Context;
+import android.content.Intent;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatManagerListener;
+import org.jivesoftware.smack.chat.ChatMessageListener;
+import org.jivesoftware.smack.packet.DefaultExtensionElement;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
 
@@ -65,8 +77,7 @@ public class RoosterConnection implements ConnectionListener {
     }
 
 
-    public void connect() throws IOException,XMPPException,SmackException
-    {
+    public void connect() throws IOException,XMPPException,SmackException {
 
         String DOMAIN = "192.168.0.110";
         //String DOMAIN = "rooms.dismail.de";
@@ -86,26 +97,55 @@ public class RoosterConnection implements ConnectionListener {
         mConnection = new XMPPTCPConnection(config.build());
         try {
             mConnection.connect();
+            mConnection.addConnectionListener(this);
         } catch (SmackException | IOException | XMPPException e) {
             e.printStackTrace();
         }
 
 
+        mConnection.login();
 
 
-      mConnection.login();
+        ChatManager.getInstanceFor(mConnection).addChatListener(new ChatManagerListener() {
+            @Override
+            public void chatCreated(Chat chat, boolean createdLocally) {
+
+            }
+        });
+
 
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);
         reconnectionManager.enableAutomaticReconnection();
 
+
+        ChatManager.getInstanceFor(mConnection).addChatListener(new ChatManagerListener() {
+            @Override
+            public void chatCreated(Chat chat, boolean createdLocally) {
+                chat.addMessageListener(new ChatMessageListener() {
+                    @Override
+                    public void processMessage(Chat chat, Message message) {
+                        System.out.println("Received message: "
+                                + (message != null ? message.getBody() : "NULL"));
+                        Intent intent = new Intent("custom-event-name");
+                        // You can also include some extra data.
+                        intent.putExtra("message", message.getBody());
+                        LocalBroadcastManager.getInstance(mApplicationContext).sendBroadcast(intent);
+                    }
+                });
+            }
+        });
     }
+
+
+
+
 
 
 
     public void disconnect()
     {
-        Log.d(TAG,"Disconnecting from serser "+ mServiceName);
+        Log.d(TAG,"Disconnecting from server "+ mServiceName);
         if (mConnection != null)
         {
             mConnection.disconnect();
@@ -129,13 +169,21 @@ public class RoosterConnection implements ConnectionListener {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Authenticated Successfully");
 
+
+        Roster roseter = Roster.getInstanceFor(connection);
+
+        Log.e("TAG",""+ roseter.getEntryCount());
+
+        //addBuddy("vijay");
+
+
     }
 
 
     @Override
     public void connectionClosed() {
         RoosterConnectionService.sConnectionState=ConnectionState.DISCONNECTED;
-        Log.d(TAG,"Connectionclosed()");
+        Log.d(TAG,"Connection closed()");
 
     }
 
@@ -149,7 +197,7 @@ public class RoosterConnection implements ConnectionListener {
     @Override
     public void reconnectingIn(int seconds) {
         RoosterConnectionService.sConnectionState = ConnectionState.CONNECTING;
-        Log.d(TAG,"ReconnectingIn() ");
+        Log.d(TAG,"ReconnectingIn()");
 
     }
 
@@ -164,6 +212,79 @@ public class RoosterConnection implements ConnectionListener {
     public void reconnectionFailed(Exception e) {
         RoosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
         Log.d(TAG,"ReconnectionFailed()");
+
+    }
+
+//    private void sendMessage (String body ,String toJid)
+//    {
+//        Log.d(TAG,"Sending message to :"+ toJid);
+//
+//
+//
+//
+//        ChatManager chatManager = ChatManager.getInstanceFor(mConnection);
+//
+//
+//        Chat chat = chatManager.createChat(toJid);
+//        try {
+//            Message message = new Message(toJid, Message.Type.chat);
+//            message.setBody(body);
+//            chat.sendMessage(message);
+//
+//        } catch (SmackException.NotConnectedException e) {
+//            e.printStackTrace();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+
+
+
+    public boolean sendmessage(String body, String destinationuser){
+
+        String from = mConnection.getUser();
+
+        ChatManager chatManager = ChatManager.getInstanceFor(mConnection);
+
+        Message message = new Message(destinationuser, Message.Type.chat);
+
+        message.setFrom(from);
+
+        message.setBody(body);
+
+        message.addExtension(new DefaultExtensionElement("from",from));
+
+        message.addExtension(new DefaultExtensionElement("to", destinationuser));
+
+        try {
+
+            mConnection.sendStanza(message);
+
+        } catch (SmackException.NotConnectedException e) {
+
+            e.printStackTrace();
+
+            return false;
+
+        }
+
+        return true;
+
+    }
+
+
+
+    public  void addBuddy(String username){
+        Presence subscribe = new Presence(Presence.Type.subscribe);
+        //I get deprecated inspection report on setTo(), but it still works
+        subscribe.setTo(username+"@"+"192.168.0.110");
+        try{
+            mConnection.sendStanza(subscribe);
+        }
+        catch(Exception e){
+
+        }
 
     }
 }
