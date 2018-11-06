@@ -151,7 +151,6 @@ public class RoosterConnectionService extends Service {
             Log.d("receiver", "Got message: " + message);
             mConnection.sendmessage(message,"vijay@desktop-qqj7qad/Smack");
 
-
         }
     };
 }

@@ -1,4 +1,4 @@
-package com.developerdesk.xmppchat;
+package com.developerdesk.xmppchat.ui.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,8 +14,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 
+import com.developerdesk.xmppchat.R;
 import com.developerdesk.xmppchat.adapter.ChatAdapter;
 import com.developerdesk.xmppchat.datamodel.ChatDataModel;
 import com.developerdesk.xmppchat.service.RoosterConnectionService;
@@ -23,7 +23,7 @@ import com.developerdesk.xmppchat.service.RoosterConnectionService;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity {
 
    private RecyclerView recyclerView;
    private EditText editText;
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent("sendmessage-event");
                 // You can also include some extra data.
                 intent.putExtra("message", editText.getText().toString());
-                LocalBroadcastManager.getInstance(MainActivity.this).sendBroadcast(intent);
+                LocalBroadcastManager.getInstance(ChatActivity.this).sendBroadcast(intent);
                 chatData.add(new ChatDataModel(editText.getText().toString(),true));
                 chatAdapter.notifyDataSetChanged();
                 recyclerView.smoothScrollToPosition(chatData.size()-1);
@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        startService(new Intent(this,RoosterConnectionService.class));
+
     }
 
 
