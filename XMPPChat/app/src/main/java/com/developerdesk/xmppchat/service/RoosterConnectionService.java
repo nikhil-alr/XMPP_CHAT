@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -12,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.developerdesk.xmppchat.Interface.ConnectionCallback;
 import com.developerdesk.xmppchat.datamodel.ChatDataModel;
 import com.developerdesk.xmppchat.xmpp_operation.RoosterConnection;
 
@@ -23,11 +25,13 @@ import java.io.IOException;
 /**
  * Created by gakwaya on 4/28/2016.
  */
-public class RoosterConnectionService extends Service {
+public class RoosterConnectionService extends Service implements ConnectionCallback {
     private static final String TAG ="RoosterService";
     private boolean mActive;//Stores whether or not the thread is active
     private Thread mThread;
-    private Handler mTHandler;//We use this handler to post messages to
+    private Handler mTHandler;
+    private ConnectionCallback connectionCallback;
+    //We use this handler to post messages to
     //the background thread.
 
     public static final String SEND_MESSAGE = "com.blikoon.rooster.sendmessage";
@@ -38,15 +42,35 @@ public class RoosterConnectionService extends Service {
     public static RoosterConnection.LoggedInState sLoggedInState;
     private RoosterConnection mConnection;
 
+
     public RoosterConnectionService() {
 
     }
 
-    @Nullable
+    private final IBinder binder = new LocalBinder();
+
+    @Override
+    public void connectedSuccessfully() {
+        connectionCallback.connectedSuccessfully();
+    }
+
+    @Override
+    public void connectionError() {
+connectionCallback.connectionError();
+    }
+
+    public class LocalBinder extends Binder {
+        public RoosterConnectionService getService() {
+            return RoosterConnectionService.this;
+        }
+    }
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
+
+
+
 
     @Override
     public void onCreate() {
@@ -69,7 +93,6 @@ public class RoosterConnectionService extends Service {
 
                         Looper.prepare();
                         mTHandler = new Handler();
-                        initConnection();
                         //THE CODE HERE RUNS IN A BACKGROUND THREAD.
                         Looper.loop();
 
@@ -119,12 +142,12 @@ public class RoosterConnectionService extends Service {
 
 
 
-    private void initConnection()
+    private void initConnection(String userName,String password,ConnectionCallback connectionCallback)
     {
         Log.d(TAG,"initConnection()");
         if( mConnection == null)
         {
-            mConnection = new RoosterConnection(this);
+            mConnection = new RoosterConnection(this,userName,password,connectionCallback);
         }
         try
         {
@@ -135,6 +158,7 @@ public class RoosterConnectionService extends Service {
         }catch (IOException |SmackException |XMPPException e)
         {
             Log.d(TAG,"Something went wrong while connecting ,make sure the credentials are right and try again");
+            connectionCallback.connectionError();
             e.printStackTrace();
             //Stop the service all together.
             stopSelf();
@@ -142,6 +166,11 @@ public class RoosterConnectionService extends Service {
 
     }
 
+    public void connect(String userName, String password, ConnectionCallback connectionCallback)
+    {
+        this.connectionCallback = connectionCallback;
+        initConnection(userName,password,connectionCallback);
+    }
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override

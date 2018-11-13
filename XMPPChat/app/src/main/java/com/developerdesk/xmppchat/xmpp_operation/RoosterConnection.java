@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.developerdesk.xmppchat.Interface.ConnectionCallback;
 import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -41,8 +42,9 @@ public class RoosterConnection implements ConnectionListener {
     private  final Context mApplicationContext;
     private  final String mUsername;
     private  final String mPassword;
-    private  final String mServiceName;
+    //private  final String mServiceName;
     private XMPPTCPConnection mConnection;
+    private ConnectionCallback connectionCallback;
 
 
     public static enum ConnectionState
@@ -56,37 +58,26 @@ public class RoosterConnection implements ConnectionListener {
     }
 
 
-    public RoosterConnection( Context context)
+    public RoosterConnection( Context context , String userName,String password,ConnectionCallback connectionCallback)
     {
-        Log.d(TAG,"RoosterConnection Constructor called.");
-        mApplicationContext = context.getApplicationContext();
-        String jid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
-                .getString("admin",null);
-        mPassword = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
-                .getString("xmpp_password",null);
 
-        if( jid != null)
-        {
-            mUsername = jid.split("@")[0];
-            mServiceName = jid.split("@")[1];
-        }else
-        {
-            mUsername ="";
-            mServiceName="";
-        }
+        this.mUsername = userName;
+        this.mPassword = password;
+        this.connectionCallback = connectionCallback;
+        mApplicationContext = context.getApplicationContext();
+
     }
 
 
     public void connect() throws IOException,XMPPException,SmackException {
 
-        String DOMAIN = "192.168.0.110";
+        String DOMAIN = "192.168.0.107";
         //String DOMAIN = "rooms.dismail.de";
         int PORT = 5222;
-        String key = "123456";
-        Log.d(TAG, "Connecting to server " + mServiceName);
+        //Log.d(TAG, "Connecting to server " + mServiceName);
         XMPPTCPConnectionConfiguration.Builder config = XMPPTCPConnectionConfiguration.builder();
         config.setSecurityMode(ConnectionConfiguration.SecurityMode.disabled);
-        config.setUsernameAndPassword("tiwari", key);
+        config.setUsernameAndPassword(mUsername, mPassword);
         config.setServiceName(DOMAIN);
         config.setHost(DOMAIN);
         config.setPort(PORT);
@@ -145,7 +136,7 @@ public class RoosterConnection implements ConnectionListener {
 
     public void disconnect()
     {
-        Log.d(TAG,"Disconnecting from server "+ mServiceName);
+        //Log.d(TAG,"Disconnecting from server "+ mServiceName);
         if (mConnection != null)
         {
             mConnection.disconnect();
@@ -161,6 +152,7 @@ public class RoosterConnection implements ConnectionListener {
     public void connected(XMPPConnection connection) {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Connected Successfully");
+        connectionCallback.connectedSuccessfully();
     }
 
     @Override
@@ -184,14 +176,14 @@ public class RoosterConnection implements ConnectionListener {
     public void connectionClosed() {
         RoosterConnectionService.sConnectionState=ConnectionState.DISCONNECTED;
         Log.d(TAG,"Connection closed()");
-
+        connectionCallback.connectionError();
     }
 
     @Override
     public void connectionClosedOnError(Exception e) {
         RoosterConnectionService.sConnectionState=ConnectionState.DISCONNECTED;
         Log.d(TAG,"ConnectionClosedOnError, error "+ e.toString());
-
+        connectionCallback.connectionError();
     }
 
     @Override
@@ -205,38 +197,17 @@ public class RoosterConnection implements ConnectionListener {
     public void reconnectionSuccessful() {
         RoosterConnectionService.sConnectionState = ConnectionState.CONNECTED;
         Log.d(TAG,"ReconnectionSuccessful()");
-
+        connectionCallback.connectedSuccessfully();
     }
 
     @Override
     public void reconnectionFailed(Exception e) {
         RoosterConnectionService.sConnectionState = ConnectionState.DISCONNECTED;
         Log.d(TAG,"ReconnectionFailed()");
+        connectionCallback.connectionError();
 
     }
 
-//    private void sendMessage (String body ,String toJid)
-//    {
-//        Log.d(TAG,"Sending message to :"+ toJid);
-//
-//
-//
-//
-//        ChatManager chatManager = ChatManager.getInstanceFor(mConnection);
-//
-//
-//        Chat chat = chatManager.createChat(toJid);
-//        try {
-//            Message message = new Message(toJid, Message.Type.chat);
-//            message.setBody(body);
-//            chat.sendMessage(message);
-//
-//        } catch (SmackException.NotConnectedException e) {
-//            e.printStackTrace();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
 
 

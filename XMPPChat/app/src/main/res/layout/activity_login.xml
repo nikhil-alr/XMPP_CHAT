@@ -74,6 +74,7 @@
                 android:textStyle="bold" />
 
             <Button
+                android:visibility="gone"
                 android:id="@+id/email_signup_button"
                 style="?android:textAppearanceSmall"
                 android:layout_width="match_parent"
