@@ -2,16 +2,15 @@ package com.developerdesk.xmppchat.xmpp_operation;
 
 import android.content.Context;
 import android.content.Intent;
-import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.developerdesk.xmppchat.Interface.ConnectionCallback;
+import com.developerdesk.xmppchat.Interface.RoosterOperation;
 import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
-import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
@@ -26,16 +25,18 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jxmpp.stringprep.XmppStringprepException;
+import org.jivesoftware.smackx.search.ReportedData;
+import org.jivesoftware.smackx.search.UserSearch;
+import org.jivesoftware.smackx.search.UserSearchManager;
+import org.jivesoftware.smackx.xdata.Form;
 
 import java.io.IOException;
-
-import javax.net.ssl.SSLSocketFactory;
+import java.util.List;
 
 /**
  * Created by gakwaya on 4/28/2016.
  */
-public class RoosterConnection implements ConnectionListener {
+public class RoosterConnection implements ConnectionListener,RoosterOperation {
 
     private static final String TAG = "RoosterConnection";
 
@@ -127,11 +128,6 @@ public class RoosterConnection implements ConnectionListener {
             }
         });
     }
-
-
-
-
-
 
 
     public void disconnect()
@@ -257,5 +253,40 @@ public class RoosterConnection implements ConnectionListener {
 
         }
 
+    }
+
+    public static void getAllUsers()
+    {
+        try {
+            UserSearchManager manager = new UserSearchManager(Utils.getConnection());
+            String searchFormString = "search." + Utils.getConnection().getServiceName();
+            Log.d("***", "SearchForm: " + searchFormString);
+            Form searchForm = null;
+
+            searchForm = manager.getSearchForm(searchFormString);
+
+            Form answerForm = searchForm.createAnswerForm();
+
+            UserSearch userSearch = new UserSearch();
+            answerForm.setAnswer("Username", true);
+            answerForm.setAnswer("search", "*");
+
+            ReportedData results = userSearch.sendSearchForm(Utils.getConnection(), answerForm, searchFormString);
+            if (results != null) {
+                List<ReportedData.Row> rows = results.getRows();
+                for (ReportedData.Row row : rows) {
+                    Log.d("***", "row: " + row.getValues("Username").toString());
+                }
+            } else {
+                Log.d("***", "No result found");
+            }
+
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        }
     }
 }

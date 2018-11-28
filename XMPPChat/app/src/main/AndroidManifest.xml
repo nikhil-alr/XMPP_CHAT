@@ -30,7 +30,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.activity.SignupActivity" />
-        <activity android:name=".ui.activity.UserListActivity"></activity>
+        <activity android:name=".ui.activity.UserListActivity" />
+        <activity
+            android:name=".ui.activity.BaseActivity"
+            android:label="@string/title_activity_base"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

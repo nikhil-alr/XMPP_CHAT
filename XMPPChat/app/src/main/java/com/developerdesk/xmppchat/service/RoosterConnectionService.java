@@ -166,10 +166,11 @@ connectionCallback.connectionError();
 
     }
 
-    public void connect(String userName, String password, ConnectionCallback connectionCallback)
+    public RoosterConnection connect(String userName, String password, ConnectionCallback connectionCallback)
     {
         this.connectionCallback = connectionCallback;
         initConnection(userName,password,connectionCallback);
+        return mConnection;
     }
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {

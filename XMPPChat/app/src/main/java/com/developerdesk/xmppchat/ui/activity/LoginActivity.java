@@ -19,7 +19,7 @@ import com.developerdesk.xmppchat.service.RoosterConnectionService;
 
 
 
-public class LoginActivity extends AppCompatActivity implements ConnectionCallback {
+public class LoginActivity extends BaseActivity implements ConnectionCallback {
 
 
     @Override
@@ -88,7 +88,7 @@ public class LoginActivity extends AppCompatActivity implements ConnectionCallba
             @Override
             public void onClick(View view) {
 
-                roosterConnectionService.connect(emailEditText.getText().toString(),passwordEditText.getText().toString(),LoginActivity.this);
+                roosterOperation = roosterConnectionService.connect(emailEditText.getText().toString(),passwordEditText.getText().toString(),LoginActivity.this);
 
                 //startActivity(new Intent(LoginActivity.this,UserListActivity.class));
             }

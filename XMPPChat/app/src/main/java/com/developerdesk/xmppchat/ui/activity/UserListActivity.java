@@ -6,11 +6,19 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import com.developerdesk.xmppchat.Interface.UserCallback;
 import com.developerdesk.xmppchat.R;
 import com.developerdesk.xmppchat.adapter.UserAdapter;
 import com.developerdesk.xmppchat.datamodel.UserModel;
+
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.search.ReportedData;
+import org.jivesoftware.smackx.search.UserSearch;
+import org.jivesoftware.smackx.search.UserSearchManager;
+import org.jivesoftware.smackx.xdata.Form;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,4 +59,7 @@ public class UserListActivity extends AppCompatActivity implements UserCallback 
 
         startActivity(new Intent(this,ChatActivity.class));
     }
+
+
+
 }
